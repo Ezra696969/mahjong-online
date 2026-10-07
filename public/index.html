@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mahjong Online</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='8' width='64' height='84' rx='10' fill='%23f6efd5' stroke='%231e7b52' stroke-width='6'/><text x='50' y='64' font-size='46' text-anchor='middle' fill='%23c0392b'>中</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="conn" class="conn hidden">Menyambung ulang…</div>
+<div id="toast" class="toast hidden"></div>
+
+<!-- BERANDA -->
+<section id="home" class="screen center">
+  <div class="card">
+    <div class="logo">
+      <div class="tile big" id="logoTile"></div>
+      <h1>Mahjong Online</h1>
+    </div>
+    <p class="sub">Main bareng teman dari komputer atau HP berbeda. Kursi kosong diisi bot.</p>
+    <label>Nama kamu
+      <input id="name" maxlength="16" placeholder="mis. Budi" autocomplete="off">
+    </label>
+    <button id="btnCreate" class="primary">Buat ruangan baru</button>
+    <div class="or">atau gabung ke ruangan teman</div>
+    <div class="row">
+      <input id="code" maxlength="4" placeholder="KODE" autocomplete="off" class="codein">
+      <button id="btnJoin">Gabung</button>
+    </div>
+    <button id="btnRules" class="link">Cara main &amp; aturan skor</button>
+  </div>
+</section>
+
+<!-- LOBI -->
+<section id="lobby" class="screen center hidden">
+  <div class="card">
+    <h2>Ruangan <span id="lobbyCode" class="code"></span></h2>
+    <p class="sub">Bagikan kode atau tautan ini ke teman agar mereka bisa bergabung.</p>
+    <div class="row">
+      <input id="inviteLink" readonly>
+      <button id="btnCopy">Salin</button>
+    </div>
+    <ul id="seatList" class="seatlist"></ul>
+    <div class="row" id="hostBtns">
+      <button id="btnAddBot">+ Tambah bot</button>
+      <button id="btnStart" class="primary">Mulai main</button>
+    </div>
+    <p id="lobbyWait" class="sub hidden">Menunggu host memulai permainan…</p>
+    <button id="btnLeaveLobby" class="link">Keluar dari ruangan</button>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen hidden">
+  <header class="topbar">
+    <div class="tb-left">Ruangan <b id="gCode"></b></div>
+    <div id="gInfo" class="tb-mid"></div>
+    <div class="tb-right">
+      <button id="btnRules2" class="icon" title="Aturan">?</button>
+      <button id="btnChat" class="icon" title="Chat">💬<span id="chatBadge" class="badge hidden">0</span></button>
+      <button id="btnLeave" class="icon" title="Keluar">⏻</button>
+    </div>
+  </header>
+  <div id="table" class="table"></div>
+</section>
+
+<!-- HASIL -->
+<div id="overlay" class="overlay hidden"><div class="result card" id="resultBox"></div></div>
+
+<!-- CHAT -->
+<div id="chatPanel" class="chat hidden">
+  <div id="chatLog" class="chatlog"></div>
+  <form id="chatForm" class="row"><input id="chatInput" maxlength="200" placeholder="Ketik pesan…" autocomplete="off"><button>Kirim</button></form>
+</div>
+
+<!-- ATURAN -->
+<div id="rules" class="overlay hidden">
+  <div class="card rules">
+    <h2>Cara main</h2>
+    <ul>
+      <li>Setiap pemain memegang 13 ubin. Pada gilirannya: <b>ambil 1 ubin, lalu buang 1 ubin</b> (klik ubin sekali untuk memilih, klik lagi untuk membuang).</li>
+      <li>Tujuan: susun <b>4 set + 1 pasang</b>. Set = <b>urutan</b> (3 angka berurutan satu jenis, mis. 4-5-6 Pin) atau <b>triplet</b> (3 ubin sama). Alternatif: <b>Tujuh Pasang</b> atau <b>Tiga Belas Yatim</b>.</li>
+      <li><b>Pon</b>: ambil ubin buangan siapa pun jika kamu punya 2 yang sama. <b>Kong</b>: 4 ubin sama (ambil 1 ubin pengganti). <b>Chi</b>: ambil ubin buangan pemain di sebelah kirimu untuk membuat urutan.</li>
+      <li><b>Menang</b>: dari ubin buangan (Ron) atau dari ubin yang kamu ambil sendiri (Tsumo). Prioritas klaim: Menang › Pon/Kong › Chi.</li>
+      <li>Bila ubin habis tanpa pemenang, ronde seri dan dealer tetap.</li>
+    </ul>
+    <h3>Skor (Faan)</h3>
+    <table class="faan">
+      <tr><td>Tangan tertutup (tanpa Pon/Chi terbuka)</td><td>1</td></tr>
+      <tr><td>Menang sendiri (Tsumo)</td><td>1</td></tr>
+      <tr><td>Semua Urutan</td><td>1</td></tr>
+      <tr><td>Triplet Naga / Angin Kursi / Angin Ronde (per set)</td><td>1</td></tr>
+      <tr><td>Semua Triplet · Satu Warna Campur · Tiga Naga Kecil</td><td>3</td></tr>
+      <tr><td>Tujuh Pasang</td><td>4</td></tr>
+      <tr><td>Satu Warna Murni · Tiga Naga Besar</td><td>6</td></tr>
+      <tr><td>Semua Honor</td><td>10</td></tr>
+      <tr><td>Tiga Belas Yatim</td><td>13</td></tr>
+      <tr><td>Ubin kong / ubin terakhir</td><td>+1</td></tr>
+    </table>
+    <p class="sub">Poin = 2<sup>faan</sup> (maks. 256). Tsumo: tiap lawan membayar poin penuh. Ron: yang membuang membayar 2× poin. Semua pemain mulai dengan 500. Dealer bergilir bila dealer tidak menang.</p>
+    <p class="sub">Giliran berjalan <b>berlawanan arah jarum jam</b>: pemain di kananmu bermain setelahmu. Waktu bermain 45 detik/giliran; bila habis, bot memainkan giliranmu.</p>
+    <button id="btnRulesClose" class="primary">Mengerti</button>
+  </div>
+</div>
+
+<script src="tiles.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

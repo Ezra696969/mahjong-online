@@ -1,0 +1,16 @@
+{
+  "name": "mahjong-online",
+  "version": "1.0.0",
+  "description": "Mahjong online multiplayer (2-4 pemain + bot) lewat browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
