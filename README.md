@@ -1,3 +1,13 @@
+---
+title: Mahjong Online
+emoji: 🀄
+colorFrom: green
+colorTo: yellow
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Mahjong Online
 
 Mahjong 4 pemain lewat browser, bisa main bareng teman dari komputer/HP berbeda. Kursi kosong diisi bot.
@@ -27,6 +37,14 @@ Karena memakai WebSocket, butuh hosting yang menjalankan server Node.js terus-me
 
 Catatan paket gratis: server "tidur" setelah ±15 menit tanpa pengunjung dan butuh ±30 detik untuk bangun. Ruangan yang sedang
 bermain tersimpan di memori, jadi hilang bila server restart/tidur. Untuk selalu aktif, pakai paket berbayar atau VPS.
+
+### Hugging Face Spaces (gratis, tanpa kartu kredit)
+Blok `---` di bagian paling atas README ini adalah konfigurasi Space (SDK Docker, port 7860); `Dockerfile` sudah disediakan.
+1. Buat Space baru di huggingface.co/new-space: SDK **Docker**, template **Blank**, visibilitas Public.
+2. `git remote add space https://huggingface.co/spaces/USERNAME/mahjong-online`
+3. `git push space main --force` (login memakai username HF dan **access token** dengan izin Write sebagai password).
+4. Setelah build selesai, pakai URL langsung `https://USERNAME-mahjong-online.hf.space`.
+Space gratis tertidur bila lama tidak dikunjungi; buka URL-nya untuk membangunkan.
 
 ### Alternatif
 Railway, Fly.io, Koyeb (mirip Render), atau VPS apa pun: `git clone`, `npm install`, `PORT=80 node server.js`
