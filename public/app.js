@@ -657,6 +657,18 @@ const kf = document.createElement('style');
 kf.textContent = '@keyframes shrinkbar { from { transform: scaleX(1); } to { transform: scaleX(0); } }';
 document.head.append(kf);
 
+// PWA: service worker + tombol Install (Android/Chrome/Edge). iPhone: Bagikan > Add to Home Screen.
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; $('#btnInstall').classList.remove('hidden'); });
+window.addEventListener('appinstalled', () => { installEvt = null; $('#btnInstall').classList.add('hidden'); toast('Aplikasi terpasang'); });
+$('#btnInstall').onclick = async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  await installEvt.userChoice.catch(() => {});
+  installEvt = null; $('#btnInstall').classList.add('hidden');
+};
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+
 try { buildSheet(); buildHelp(); } catch (e) { console.error('info.js gagal dimuat', e); }
 const qs = new URLSearchParams(location.search).get('room');
 if (qs) $('#code').value = qs.toUpperCase().slice(0, 4);

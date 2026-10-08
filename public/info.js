@@ -104,6 +104,7 @@ function buildHelp() {
     'Ubin tidak diurutkan otomatis. Klik <b>Urutkan</b> atau <b>seret ubin</b> untuk mengatur sendiri (ubin yang baru diambil bisa diseret ke tanganmu).',
     'Warna sisi bawah ubin di tumpukan tengah = pemain yang membuangnya (sama dengan warna avatar).',
     'Waktu giliran 45 detik; bila habis, bot memainkan giliranmu.',
+    'Pasang sebagai aplikasi: di Android/Chrome klik tombol <b>Install</b> di atas (atau menu browser › Install app). Di iPhone: Safari › Bagikan › <b>Add to Home Screen</b>.',
   ], false);
 
   b.append(el('h3', '', 'Skor (faan)'));

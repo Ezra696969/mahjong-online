@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mahjong Online</title>
+<meta name="theme-color" content="#06130e">
+<meta name="description" content="Mahjong 4 pemain, main bareng teman dari perangkat berbeda.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mahjong">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='8' width='64' height='84' rx='10' fill='%23f6efd5' stroke='%231e7b52' stroke-width='6'/><text x='50' y='64' font-size='46' text-anchor='middle' fill='%23c0392b'>中</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +28,7 @@
   <div class="tb-left"><span class="brand">🀄<span class="bt"> Mahjong Online</span></span><span id="tbRoom" class="hidden">· Ruangan <b id="gCode"></b></span></div>
   <div id="gInfo" class="tb-mid"></div>
   <div class="tb-right">
+    <button id="btnInstall" class="tbtn hidden" title="Pasang sebagai aplikasi">Install</button>
     <button id="btnSheet" class="tbtn" aria-pressed="false">Cheatsheet</button>
     <button id="btnHelp" class="tbtn" aria-pressed="false">Help</button>
     <button id="btnAnim" class="tbtn icon" title="Animasi hidup/mati">✨</button>
