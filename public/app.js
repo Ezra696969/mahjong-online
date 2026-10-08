@@ -9,7 +9,7 @@ function h(tag, cls, ...kids) {
 }
 const WIND = ['東', '南', '西', '北'];
 const SEAT_COLOR = ['#e5604d', '#f2c14e', '#5aa9e6', '#a78bfa'];
-const FLASH = { pon: 'Pon!', chi: 'Chi!', kong: 'Kong!', tsumo: 'Tsumo! 🎉', ron: 'Ron! 🎉' };
+const FLASH = { pon: 'Pon!', chi: 'Chi!', kong: 'Kong!', tsumo: 'Tsumo!', ron: 'Ron!' };
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -528,7 +528,11 @@ function renderResult(g) {
   resultFor = g.gid;
   const r = g.result, box = $('#resultBox');
   box.innerHTML = '';
-  box.append(h('h2', '', r.type === 'win' ? `🎉 ${nameOf(r.winner)} menang!` : 'Seri — ubin habis'));
+  const win = r.type === 'win';
+  const banner = h('div', 'win-banner' + (win ? '' : ' draw'));
+  const rule = h('div', 'win-rule'); rule.append(h('i'));
+  banner.append(h('div', 'win-label', win ? 'WINNER' : 'DRAW'), rule, h('div', 'win-name', win ? nameOf(r.winner) : 'Ubin habis, tidak ada pemenang'));
+  box.append(banner);
   if (r.type === 'win') {
     box.append(h('div', 'sub', r.selfDraw ? 'Menang sendiri (Tsumo)' : `Ron dari ${nameOf(r.from)}`));
     const items = h('div', 'items');

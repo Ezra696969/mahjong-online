@@ -159,7 +159,19 @@ b { font-weight: 700; }
 .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .66); display: flex; align-items: center; justify-content: center; padding: 14px; z-index: 120; overflow: auto; animation: fadeIn .3s both; }
 @keyframes fadeIn { from { opacity: 0; } }
 .result { width: min(720px, 100%); max-height: 100%; overflow: auto; }
-.result h2 { font-size: 28px; color: var(--accent); }
+.win-banner { margin: 0 0 12px; text-align: center; }
+.win-label { font-family: 'Cinzel', 'Cormorant SC', Georgia, 'Times New Roman', serif; font-weight: 900; font-size: clamp(36px, 8vw, 62px); line-height: 1.05; letter-spacing: .3em; margin-right: -.3em;
+  background: linear-gradient(100deg, #a8760a 0%, #f7d070 28%, #fff6cf 50%, #f7d070 72%, #a8760a 100%); background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 12px rgba(242, 193, 78, .35));
+  animation: shine 3.2s linear infinite, labelIn .9s cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes shine { to { background-position: -220% 0; } }
+@keyframes labelIn { from { opacity: 0; letter-spacing: .7em; transform: scale(.92); } to { opacity: 1; letter-spacing: .3em; transform: none; } }
+.win-rule { display: flex; align-items: center; justify-content: center; gap: 12px; width: min(340px, 72%); margin: 6px auto 10px; animation: fadeIn .8s .35s both; }
+.win-rule::before, .win-rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(242, 193, 78, .8)); }
+.win-rule::after { transform: scaleX(-1); }
+.win-rule i { width: 8px; height: 8px; background: var(--accent); transform: rotate(45deg); box-shadow: 0 0 10px rgba(242, 193, 78, .8); }
+.win-name { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-weight: 700; font-size: clamp(24px, 5vw, 36px); letter-spacing: .02em; color: #fff; text-shadow: 0 2px 14px rgba(0, 0, 0, .5); animation: fadeIn .8s .5s both; overflow-wrap: anywhere; }
+.win-banner.draw .win-label { font-size: clamp(30px, 6.5vw, 50px); }
 .items { display: inline-block; text-align: left; margin: 6px 0; }
 .items div { display: flex; justify-content: space-between; gap: 30px; }
 .deltas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
