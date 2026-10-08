@@ -176,7 +176,30 @@ function capturePoolRect() {
   const t = $('.pool .tile:last-child');
   return t ? t.getBoundingClientRect() : null;
 }
-const wallRect = () => { const w = $('.wall-stack'); return w ? w.getBoundingClientRect() : null; };
+// Tembok ubin tertutup yang mengitari meja. 84 slot (136 - 52 dibagikan); slot terdepan habis lebih dulu.
+const WALL_SLOTS = 84, WALL_SIDES = [25, 17, 25, 17]; // atas, kanan, bawah, kiri
+function buildWallRing(g) {
+  const ring = h('div', 'wring');
+  const consumed = Math.max(0, WALL_SLOTS - g.wallTotal);
+  let idx = 0;
+  ['wtop', 'wright', 'wbot', 'wleft'].forEach((cls, side) => {
+    const sd = h('div', 'wside ' + cls);
+    for (let k = 0; k < WALL_SIDES[side]; k++, idx++) {
+      const s = h('i', 'ws' + (idx < consumed ? ' gone' : ''));
+      s.dataset.i = idx;
+      sd.append(s);
+    }
+    ring.append(sd);
+  });
+  return ring;
+}
+// Asal animasi ambil ubin: slot tembok yang baru saja habis.
+const wallRect = () => {
+  const g = game;
+  const e = g ? $(`.wring .ws[data-i="${Math.max(0, Math.min(WALL_SLOTS - g.wallTotal, WALL_SLOTS) - 1)}"]`) : null;
+  const r = (e || $('.center-zone'));
+  return r ? r.getBoundingClientRect() : null;
+};
 function seatRect(seat) {
   const e = seat === you ? $('.hand') : $(`.panel[data-seat="${seat}"] .hidden-hand`);
   if (!e) return null;
@@ -384,11 +407,10 @@ function renderGame() {
 
   // tengah meja: tumpukan buangan
   const center = h('div', 'center-zone');
+  center.append(buildWallRing(g));
   const hud = h('div', 'hud');
-  const wall = h('div', 'wall-stack');
-  [[0, 8], [3, 5], [6, 2], [9, -1]].forEach(([x, y]) => { const t = makeTile(null); t.style.left = x + 'px'; t.style.top = y + 'px'; wall.append(t); });
   const info = h('div', ''); info.innerHTML = `Ubin tersisa<b>${g.wallLeft}</b>`;
-  hud.append(wall, info);
+  hud.append(info);
   center.append(hud);
   const pool = h('div', 'pool');
   const pile = h('div', 'pile');
@@ -669,6 +691,11 @@ $('#logoTile').append(makeTile('d1'));
 const kf = document.createElement('style');
 kf.textContent = '@keyframes shrinkbar { from { transform: scaleX(1); } to { transform: scaleX(0); } }';
 document.head.append(kf);
+
+// Kunci zoom/geser halaman (iOS mengabaikan user-scalable, jadi cegah gestur cubit juga)
+['gesturestart', 'gesturechange', 'gestureend'].forEach((n) => document.addEventListener(n, (e) => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
 
 // PWA: service worker + tombol Install (Android/Chrome/Edge). iPhone: Bagikan > Add to Home Screen.
 let installEvt = null;

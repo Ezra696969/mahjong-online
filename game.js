@@ -447,6 +447,7 @@ class Game {
       dealer: this.dealer,
       roundWind: this.roundWind,
       wallLeft: this.wallLeft,
+      wallTotal: this.wall.length, // ubin di tembok termasuk 14 ubin mati (untuk gambar tembok)
       scores: this.scores,
       players: [0, 1, 2, 3].map((s) => ({
         count: this.hands[s].length,
