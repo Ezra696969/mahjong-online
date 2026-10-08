@@ -34,7 +34,10 @@ const store = {
   clear() { try { sessionStorage.removeItem('mj'); } catch {} },
 };
 
-function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function send(o) {
+  if (ws && ws.readyState === 1) return ws.send(JSON.stringify(o));
+  toast('Belum tersambung ke server. Tunggu sebentar lalu coba lagi.');
+}
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 2800);
@@ -45,11 +48,13 @@ function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}`);
   ws.onopen = () => {
+    $('#conn').textContent = 'Menyambung ulang…';
     $('#conn').classList.add('hidden');
     const s = store.get();
     if (s) send({ t: 'resume', code: s.code, token: s.token });
   };
   ws.onclose = () => { $('#conn').classList.remove('hidden'); setTimeout(connect, 1500); };
+  ws.onerror = () => { $('#conn').textContent = 'Tidak bisa terhubung ke server game (WebSocket). Mencoba lagi…'; $('#conn').classList.remove('hidden'); };
   ws.onmessage = (ev) => {
     let m; try { m = JSON.parse(ev.data); } catch { return; }
     switch (m.t) {
@@ -648,8 +653,7 @@ const kf = document.createElement('style');
 kf.textContent = '@keyframes shrinkbar { from { transform: scaleX(1); } to { transform: scaleX(0); } }';
 document.head.append(kf);
 
-buildSheet();
-buildHelp();
+try { buildSheet(); buildHelp(); } catch (e) { console.error('info.js gagal dimuat', e); }
 const qs = new URLSearchParams(location.search).get('room');
 if (qs) $('#code').value = qs.toUpperCase().slice(0, 4);
 

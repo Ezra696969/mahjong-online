@@ -8,6 +8,7 @@ const { TILE_RE } = require('./game');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, 'public');
+const BUILD = Date.now().toString(36);
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json',
@@ -21,7 +22,9 @@ const server = http.createServer((req, res) => {
   if (!file.startsWith(PUBLIC)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    // Tempelkan ID build ke URL skrip/css agar CDN/browser tidak mencampur file lama dan baru
+    if (path.extname(file) === '.html') data = data.toString().replace(/(src|href)="([\w.-]+\.(?:js|css))"/g, `$1="$2?v=${BUILD}"`);
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
     res.end(data);
   });
 });
