@@ -34,8 +34,13 @@ const store = {
   clear() { try { sessionStorage.removeItem('mj'); } catch {} },
 };
 
+let queuedStart = null; // create/join yang ditekan saat koneksi belum siap; dikirim begitu tersambung
 function send(o) {
   if (ws && ws.readyState === 1) return ws.send(JSON.stringify(o));
+  if ((o.t === 'create' || o.t === 'join') && ws && ws.readyState === 0) {
+    queuedStart = o;
+    return toast('Menyambung ke server… ruangan dibuat begitu tersambung.');
+  }
   toast('Belum tersambung ke server. Tunggu sebentar lalu coba lagi.');
 }
 function toast(msg) {
@@ -46,14 +51,21 @@ function toast(msg) {
 // ---------- koneksi ----------
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}`);
+  const sock = new WebSocket(`${proto}://${location.host}`);
+  ws = sock;
+  // Tampilkan status bila server lambat menjawab (mis. container baru bangun); batalkan bila macet >8 detik
+  const slow = setTimeout(() => { if (sock.readyState === 0) { $('#conn').textContent = 'Menyambungkan ke server…'; $('#conn').classList.remove('hidden'); } }, 1200);
+  const stuck = setTimeout(() => { if (sock.readyState === 0) sock.close(); }, 8000);
   ws.onopen = () => {
+    clearTimeout(slow); clearTimeout(stuck);
     $('#conn').textContent = 'Menyambung ulang…';
     $('#conn').classList.add('hidden');
     const s = store.get();
     if (s) send({ t: 'resume', code: s.code, token: s.token });
+    else if (queuedStart) { const q = queuedStart; queuedStart = null; send(q); }
+    queuedStart = null;
   };
-  ws.onclose = () => { $('#conn').classList.remove('hidden'); setTimeout(connect, 1500); };
+  ws.onclose = () => { clearTimeout(slow); clearTimeout(stuck); $('#conn').classList.remove('hidden'); setTimeout(connect, 1500); };
   ws.onerror = () => { $('#conn').textContent = 'Tidak bisa terhubung ke server game (WebSocket). Mencoba lagi…'; $('#conn').classList.remove('hidden'); };
   ws.onmessage = (ev) => {
     let m; try { m = JSON.parse(ev.data); } catch { return; }
