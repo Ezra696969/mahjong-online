@@ -2,7 +2,11 @@
   --bg: #06130e; --felt: #0f6e4a; --felt2: #094631; --wood: #6b4423; --wood2: #3b2412;
   --panel: rgba(255, 255, 255, .06); --line: rgba(255, 255, 255, .12);
   --ink: #f1f7f2; --muted: #9db8a8; --accent: #f2c14e; --danger: #e5604d; --card: #0f2f24;
-  --tw: 44px; --tbh: 46px;
+  --tw: 44px;
+  /* area aman iPhone (notch / kamera depan / indikator home) */
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px);
+  --tbh: calc(46px + var(--sat));
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; color: var(--ink); overflow: hidden;
@@ -23,7 +27,7 @@ label input { display: block; width: 100%; margin-top: 4px; }
 b { font-weight: 700; }
 
 /* ---------- topbar ---------- */
-.topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--tbh); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px;
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--tbh); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: var(--sat) max(12px, var(--sar)) 0 max(12px, var(--sal));
   background: linear-gradient(rgba(0, 0, 0, .55), rgba(0, 0, 0, .35)); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); z-index: 80; font-size: 14px; }
 .brand { font-weight: 700; letter-spacing: .02em; }
 .tb-mid { color: var(--accent); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -82,7 +86,7 @@ b { font-weight: 700; }
 .av.sm { width: 22px; height: 22px; font-size: 12px; }
 
 /* ---------- meja ---------- */
-.table { position: absolute; inset: 0; padding: 8px; display: grid; grid-template-columns: minmax(104px, 160px) 1fr minmax(104px, 160px); grid-template-rows: auto 1fr auto; gap: 8px; }
+.table { position: absolute; inset: 0; padding: 8px max(8px, var(--sar)) max(8px, var(--sab)) max(8px, var(--sal)); display: grid; grid-template-columns: minmax(104px, 160px) 1fr minmax(104px, 160px); grid-template-rows: auto 1fr auto; gap: 8px; }
 .p-top { grid-column: 2; grid-row: 1; }
 .p-left { grid-column: 1; grid-row: 2; }
 .p-right { grid-column: 3; grid-row: 2; }
@@ -225,15 +229,25 @@ b { font-weight: 700; }
 .faan td:last-child { text-align: right; color: var(--accent); font-weight: 700; }
 .help > button { width: 100%; margin-top: 14px; padding: 11px; }
 
-.chat { position: fixed; right: 12px; bottom: 12px; width: min(320px, calc(100% - 24px)); background: var(--card); border: 1px solid #2f7d5d; border-radius: 14px; padding: 8px; z-index: 90; box-shadow: 0 6px 24px #000a; animation: cardIn .3s both; }
+.chat { position: fixed; right: 12px; bottom: calc(12px + var(--sab)); width: min(320px, calc(100% - 24px)); background: var(--card); border: 1px solid #2f7d5d; border-radius: 14px; padding: 8px; z-index: 90; box-shadow: 0 6px 24px #000a; animation: cardIn .3s both; }
 .chatlog { height: 160px; overflow-y: auto; font-size: 14px; padding: 4px; }
 .chatlog div { margin: 3px 0; word-break: break-word; }
 .chatlog b { color: var(--accent); }
-.toast { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); background: var(--danger); color: #fff; padding: 8px 16px; border-radius: 8px; z-index: 300; box-shadow: 0 4px 16px #0008; animation: cardIn .3s both; }
-.conn { position: fixed; top: 0; left: 0; right: 0; text-align: center; background: #b8860b; color: #fff; z-index: 400; padding: 4px; font-size: 14px; }
+.toast { position: fixed; top: calc(var(--tbh) + 8px); left: 50%; transform: translateX(-50%); background: var(--danger); color: #fff; padding: 8px 16px; border-radius: 8px; z-index: 300; box-shadow: 0 4px 16px #0008; animation: cardIn .3s both; }
+.conn { position: fixed; top: 0; left: 0; right: 0; text-align: center; background: #b8860b; color: #fff; z-index: 400; padding: calc(4px + var(--sat)) 4px 4px; font-size: 14px; }
+
+/* petunjuk pasang di iPhone */
+.ioshint { position: fixed; left: 12px; right: 12px; bottom: calc(14px + var(--sab)); z-index: 250; max-width: 440px; margin: 0 auto; background: #12382b; border: 1px solid #38906b; border-radius: 18px; padding: 14px 40px 10px 16px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, .65); animation: cardIn .5s cubic-bezier(.2, .9, .3, 1.2) both; }
+.ioshint #iosClose { position: absolute; top: 6px; right: 6px; padding: 4px 10px; background: none; border: none; font-size: 18px; color: var(--muted); }
+.ih-title { font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+.ih-steps { font-size: 14px; line-height: 1.7; }
+.ih-steps svg { vertical-align: -4px; margin: 0 2px; color: #7cc7f0; }
+.ih-arrow { text-align: center; color: var(--accent); font-size: 20px; margin-top: 2px; animation: arrowBob 1s ease-in-out infinite; }
+@keyframes arrowBob { 50% { transform: translateY(6px); } }
 
 @media (max-width: 860px) {
-  .table { padding: 4px; gap: 4px; grid-template-columns: minmax(72px, 104px) 1fr minmax(72px, 104px); }
+  .table { padding: 4px max(4px, var(--sar)) max(4px, var(--sab)) max(4px, var(--sal)); gap: 4px; grid-template-columns: minmax(72px, 104px) 1fr minmax(72px, 104px); }
   .tile.small { --tw: 22px; }
   .ph { font-size: 12px; } .ph .nm { max-width: 64px; }
   .hand { gap: 2px; } .drawn { margin-left: 6px; }
@@ -247,7 +261,7 @@ b { font-weight: 700; }
 @media (max-width: 520px) {
   .table { grid-template-columns: 74px 1fr 74px; }
   .bt { display: none; }
-  .topbar { padding: 0 8px; gap: 4px; }
+  .topbar { padding: var(--sat) max(8px, var(--sar)) 0 max(8px, var(--sal)); gap: 4px; }
   .tbtn { padding: 5px 8px; font-size: 12.5px; }
   .tb-right { gap: 4px; }
   .ph .nm { max-width: 56px; }

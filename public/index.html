@@ -105,6 +105,14 @@
   <form id="chatForm" class="row"><input id="chatInput" maxlength="200" placeholder="Ketik pesan…" autocomplete="off"><button>Kirim</button></form>
 </div>
 
+<!-- Petunjuk pasang untuk iPhone/iPad (Safari tidak punya tombol Install) -->
+<div id="iosHint" class="ioshint hidden" role="dialog" aria-label="Pasang sebagai aplikasi">
+  <button id="iosClose" aria-label="Tutup">&times;</button>
+  <div class="ih-title">Pasang sebagai aplikasi</div>
+  <div class="ih-steps" id="iosSteps"></div>
+  <div class="ih-arrow" id="iosArrow">&#9660;</div>
+</div>
+
 <div id="fx"></div>
 
 <script src="tiles.js"></script>

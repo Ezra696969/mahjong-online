@@ -300,6 +300,7 @@ function flash(la) {
 function show(id) { for (const s of ['home', 'lobby', 'game']) $('#' + s).classList.toggle('hidden', s !== id); }
 function render() {
   const inRoom = !!room;
+  if (inRoom) $('#iosHint').classList.add('hidden');
   $('#tbRoom').classList.toggle('hidden', !inRoom);
   $('#btnChat').classList.toggle('hidden', !inRoom);
   $('#btnLeave').classList.toggle('hidden', !inRoom);
@@ -679,6 +680,28 @@ $('#btnInstall').onclick = async () => {
   await installEvt.userChoice.catch(() => {});
   installEvt = null; $('#btnInstall').classList.add('hidden');
 };
+// Petunjuk otomatis iPhone/iPad: Safari tidak punya tombol Install, jadi ajari langkah manualnya.
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const isRealSafari = () => /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|Instagram|Line\/|MicroMessenger/.test(navigator.userAgent);
+function maybeShowIosHint(force = false) {
+  if (!isIOS() || isStandalone()) return;
+  if (!force) {
+    const t = +lsGet('mjios') || 0;
+    if (Date.now() - t < 14 * 864e5) return; // sudah ditutup: jangan ganggu 14 hari
+    if (room) return;                         // hanya di beranda, jangan ganggu di lobi/saat bermain
+  }
+  const share = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Bagikan"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  const safari = isRealSafari();
+  $('#iosSteps').innerHTML = safari
+    ? `1. Ketuk tombol <b>Bagikan</b> ${share} di bilah Safari<br>2. Pilih <b>Add to Home Screen</b><br>3. Ketuk <b>Add</b>`
+    : 'Buka situs ini di <b>Safari</b> dulu, lalu ketuk <b>Bagikan</b> › <b>Add to Home Screen</b>.';
+  $('#iosArrow').classList.toggle('hidden', !safari);
+  $('#iosHint').classList.remove('hidden');
+}
+$('#iosClose').onclick = () => { $('#iosHint').classList.add('hidden'); lsSet('mjios', String(Date.now())); };
+setTimeout(() => maybeShowIosHint(), 2500);
+
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
 try { buildSheet(); buildHelp(); } catch (e) { console.error('info.js gagal dimuat', e); }
