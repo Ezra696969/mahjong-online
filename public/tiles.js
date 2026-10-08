@@ -85,7 +85,10 @@ function tileSVG(t) {
   return (_svgCache[t] = `<svg viewBox="0 0 60 78" xmlns="http://www.w3.org/2000/svg">${body}</svg>`);
 }
 
-const TILE_NAMES = { m: 'Wan', p: 'Pin', s: 'Bambu', w: 'Angin', d: 'Naga' };
+const SUIT_ORDER = { m: 0, p: 1, s: 2, w: 3, d: 4 };
+const tileSortKey = (t) => SUIT_ORDER[t[0]] * 10 + +t[1];
+
+const TILE_NAMES ={ m: 'Wan', p: 'Pin', s: 'Bambu', w: 'Angin', d: 'Naga' };
 function tileName(t) {
   if (t[0] === 'w') return 'Angin ' + ['Timur', 'Selatan', 'Barat', 'Utara'][+t[1] - 1];
   if (t[0] === 'd') return 'Naga ' + ['Merah', 'Hijau', 'Putih'][+t[1] - 1];

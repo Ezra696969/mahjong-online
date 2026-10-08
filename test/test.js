@@ -44,5 +44,7 @@ for (let n = 0; n < 400; n++) {
   // jumlah ubin total tetap 136
   const total = g.wall.length + g.hands.flat().length + g.discards.flat().length + g.melds.flat().reduce((a, m) => a + m.tiles.length, 0);
   assert.strictEqual(total, 136, 'total ubin 136');
+  assert.strictEqual(g.pool.length, g.discards.flat().length, 'pool konsisten dengan buangan');
+  assert(g.drawSeq >= 1 && g.gid.length === 8);
 }
 console.log(`OK: 400 permainan simulasi (${wins} menang, ${draws} seri)`);

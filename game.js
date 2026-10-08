@@ -149,6 +149,10 @@ class Game {
     this.lastAction = null;
     this.actionSeq = 0;
     this.result = null;
+    this.gid = crypto.randomBytes(4).toString('hex');
+    this.pool = []; // buangan berurutan {tile, from}
+    this.drawSeq = 0;
+    this.lastDrawInfo = null;
     this._draw(dealer, false);
   }
 
@@ -161,6 +165,7 @@ class Game {
     this.hands[seat].push(t);
     sortTiles(this.hands[seat]);
     this.lastDraw = { seat, tile: t, kong: !!fromBack };
+    this.lastDrawInfo = { id: ++this.drawSeq, seat, kong: !!fromBack };
   }
 
   _evaluate(seat, winTile) {
@@ -198,6 +203,7 @@ class Game {
     if (i < 0) return { error: 'Ubin tidak ada di tangan' };
     this.hands[seat].splice(i, 1);
     this.discards[seat].push(tile);
+    this.pool.push({ tile, from: seat });
     this.lastDiscard = { tile, from: seat, n: this.discards[seat].length - 1 };
     this.lastDraw = null;
     this._note(seat, 'discard', tile);
@@ -269,6 +275,7 @@ class Game {
   }
   _claimed(from) {
     this.discards[from].pop();
+    this.pool.pop();
     this.lastDiscard = null;
     this.pending = null;
     this.phase = 'discard';
@@ -336,6 +343,7 @@ class Game {
       this.hands[seat].push(tile);
       sortTiles(this.hands[seat]);
       this.discards[from].pop();
+      this.pool.pop();
       this.lastDiscard = null;
     }
     const pts = faanPoints(info.faan);
@@ -432,6 +440,7 @@ class Game {
     const hand = this.hands[seat].slice();
     if (drawnTile) hand.splice(hand.lastIndexOf(drawnTile), 1);
     const v = {
+      gid: this.gid,
       you: seat,
       phase: this.phase,
       turn: this.turn,
@@ -450,6 +459,8 @@ class Game {
       actions: null,
       claim: null,
       waiting: this.pendingSeats(),
+      pool: this.pool,
+      draw: this.lastDrawInfo,
       lastDiscard: this.lastDiscard,
       lastAction: this.lastAction,
       result: over ? this.result : null,

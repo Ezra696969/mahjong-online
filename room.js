@@ -85,8 +85,8 @@ class Room {
   }
 
   afterChange() {
+    this.schedule(); // hitung deadline dulu agar ikut terkirim di status
     this.broadcast();
-    this.schedule();
   }
 
   clearTimers() { this.timers.forEach(clearTimeout); this.timers = []; }

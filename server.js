@@ -96,7 +96,7 @@ function handle(ws, m) {
     if (s.ws && s.ws !== ws) { s.ws.ctx = null; try { s.ws.close(); } catch {} }
     s.ws = ws; s.connected = true;
     attach(ws, room, seat, s.token);
-    return room.schedule();
+    return room.afterChange();
   }
 
   const ctx = ws.ctx;
