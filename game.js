@@ -1,11 +1,14 @@
 'use strict';
-// Logika Mahjong (gaya Hong Kong disederhanakan): 136 ubin, tanpa bunga.
+// Logika Mahjong (gaya Hong Kong disederhanakan): 144 ubin (136 + 8 bunga/musim).
 // Server-authoritative: semua aturan divalidasi di sini.
 
 const crypto = require('crypto');
 
 // ---------- Ubin ----------
 // Notasi: m1-m9 (Wan), p1-p9 (Pin/lingkaran), s1-s9 (Bambu), w1-w4 (Angin T/S/B/U), d1-d3 (Naga Merah/Hijau/Putih)
+// Bunga f1-f4 (Plum, Anggrek, Krisan, Bambu) dan Musim n1-n4 (Semi, Panas, Gugur, Dingin): tidak pernah masuk tangan,
+// langsung diletakkan di samping dan diganti ubin dari ujung belakang tembok. Nomor 1-4 = kursi Timur-Utara.
+const isFlower = (t) => t[0] === 'f' || t[0] === 'n';
 function tileIdx(t) {
   const n = +t[1] - 1;
   switch (t[0]) {
@@ -23,7 +26,7 @@ function idxTile(i) {
   if (i < 31) return 'w' + (i - 26);
   return 'd' + (i - 30);
 }
-const TILE_RE = /^([mps][1-9]|w[1-4]|d[1-3])$/;
+const TILE_RE = /^([mps][1-9]|w[1-4]|d[1-3]|[fn][1-4])$/;
 const sortTiles = (a) => a.sort((x, y) => tileIdx(x) - tileIdx(y));
 function countsOf(tiles) {
   const c = new Array(34).fill(0);
@@ -33,6 +36,7 @@ function countsOf(tiles) {
 function buildWall() {
   const w = [];
   for (let i = 0; i < 34; i++) for (let k = 0; k < 4; k++) w.push(idxTile(i));
+  for (let n = 1; n <= 4; n++) { w.push('f' + n); w.push('n' + n); }
   for (let i = w.length - 1; i > 0; i--) {
     const j = crypto.randomInt(i + 1);
     [w[i], w[j]] = [w[j], w[i]];
@@ -121,6 +125,13 @@ function scoreWin(patterns, ctx) {
       }
       if (!openMelds) items.push({ name: 'Tangan Tertutup', faan: 1 });
     }
+    // bunga & musim: nomor sesuai kursi = 1 faan per ubin; set lengkap = bonus
+    const fl = ctx.flowers || [], seatNo = ctx.seatWind + 1;
+    const nF = fl.filter((t) => t[0] === 'f').length, nS = fl.filter((t) => t[0] === 'n').length;
+    if (fl.includes('f' + seatNo)) items.push({ name: 'Bunga Kursi', faan: 1 });
+    if (fl.includes('n' + seatNo)) items.push({ name: 'Musim Kursi', faan: 1 });
+    if (nF === 4 && nS === 4) items.push({ name: 'Delapan Bunga', faan: 8 });
+    else { if (nF === 4) items.push({ name: 'Empat Bunga', faan: 2 }); if (nS === 4) items.push({ name: 'Empat Musim', faan: 2 }); }
     if (ctx.selfDraw) items.push({ name: 'Menang Sendiri (Tsumo)', faan: 1 });
     if (ctx.kongDraw) items.push({ name: 'Menang dari Ubin Kong', faan: 1 });
     if (ctx.lastTile) items.push({ name: 'Ubin Terakhir', faan: 1 });
@@ -133,13 +144,15 @@ const faanPoints = (f) => Math.min(2 ** f, 256);
 
 // ---------- Game ----------
 class Game {
-  constructor({ dealer, roundWind, scores }) {
+  constructor({ dealer, roundWind, scores, dice }) {
     this.dealer = dealer;
+    this.dice = dice || null; // [d1, d2] hanya pada ronde pertama (penentu bandar)
     this.roundWind = roundWind;
     this.scores = scores.slice();
     this.wall = buildWall();
-    this.hands = [0, 1, 2, 3].map(() => sortTiles(this.wall.splice(0, 13)));
+    this.hands = [0, 1, 2, 3].map(() => this.wall.splice(0, 13));
     this.melds = [[], [], [], []];
+    this.flowers = [[], [], [], []]; // bunga/musim yang sudah diletakkan tiap pemain
     this.discards = [[], [], [], []];
     this.turn = dealer;
     this.phase = 'discard'; // discard | claim | over
@@ -153,7 +166,21 @@ class Game {
     this.pool = []; // buangan berurutan {tile, from}
     this.drawSeq = 0;
     this.lastDrawInfo = null;
+    // ganti bunga di tangan awal: mulai dari bandar, searah giliran
+    for (let k = 0; k < 4; k++) this._settleFlowers((dealer + k) % 4);
+    this.hands.forEach((h) => sortTiles(h));
     this._draw(dealer, false);
+  }
+
+  // pindahkan semua bunga di tangan ke samping dan ganti dari ujung belakang tembok
+  _settleFlowers(seat) {
+    const h = this.hands[seat];
+    for (let guard = 0; guard < 20; guard++) {
+      const i = h.findIndex(isFlower);
+      if (i < 0) return;
+      this.flowers[seat].push(h.splice(i, 1)[0]);
+      if (this.wall.length > 0) h.push(this.wall.shift());
+    }
   }
 
   get wallLeft() { return Math.max(0, this.wall.length - 14); }
@@ -161,11 +188,14 @@ class Game {
   _note(seat, kind, tile) { this.lastAction = { id: ++this.actionSeq, seat, kind, tile: tile || null }; }
 
   _draw(seat, fromBack) {
-    const t = fromBack ? this.wall.shift() : this.wall.pop();
+    let t = fromBack ? this.wall.shift() : this.wall.pop();
+    let taken = 0;
+    // bunga langsung diletakkan, ambil pengganti dari ujung belakang
+    while (t && isFlower(t) && this.wall.length > 0) { this.flowers[seat].push(t); taken++; t = this.wall.shift(); }
     this.hands[seat].push(t);
     sortTiles(this.hands[seat]);
     this.lastDraw = { seat, tile: t, kong: !!fromBack };
-    this.lastDrawInfo = { id: ++this.drawSeq, seat, kong: !!fromBack };
+    this.lastDrawInfo = { id: ++this.drawSeq, seat, kong: !!fromBack, flowers: taken };
   }
 
   _evaluate(seat, winTile) {
@@ -175,7 +205,7 @@ class Game {
     if (!pats.length) return null;
     return scoreWin(pats, {
       tiles, melds: this.melds[seat], selfDraw,
-      seatWind: this.seatWind(seat), roundWind: this.roundWind,
+      seatWind: this.seatWind(seat), roundWind: this.roundWind, flowers: this.flowers[seat],
       lastTile: this.wallLeft === 0,
       kongDraw: selfDraw && !!(this.lastDraw && this.lastDraw.kong),
     });
@@ -363,6 +393,7 @@ class Game {
     this.pending = null;
     for (let s = 0; s < 4; s++) this.scores[s] += result.delta[s];
     result.hands = this.hands.map((h) => h.slice());
+    result.flowers = this.flowers.map((f) => f.slice());
     result.melds = this.melds.map((m) => m.map((x) => ({ ...x, tiles: x.tiles.slice() })));
     result.dealerStays = result.type === 'draw' || result.winner === this.dealer;
     this.result = result;
@@ -441,6 +472,7 @@ class Game {
     if (drawnTile) hand.splice(hand.lastIndexOf(drawnTile), 1);
     const v = {
       gid: this.gid,
+      dice: this.dice,
       you: seat,
       phase: this.phase,
       turn: this.turn,
@@ -453,6 +485,7 @@ class Game {
         count: this.hands[s].length,
         melds: this.melds[s].map((m) => ({ type: m.type, tiles: m.tiles, open: !!m.open, concealed: !!m.concealed })),
         discards: this.discards[s],
+        flowers: this.flowers[s],
         wind: this.seatWind(s),
       })),
       hand,
@@ -482,4 +515,4 @@ class Game {
   }
 }
 
-module.exports = { Game, winPatterns, scoreWin, faanPoints, tileIdx, idxTile, countsOf, TILE_RE, sortTiles };
+module.exports = { isFlower, Game, winPatterns, scoreWin, faanPoints, tileIdx, idxTile, countsOf, TILE_RE, sortTiles };

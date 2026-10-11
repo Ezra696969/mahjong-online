@@ -1,6 +1,7 @@
 'use strict';
 const assert = require('assert');
-const { Game, winPatterns, scoreWin } = require('../game');
+const { Game, winPatterns, scoreWin, isFlower } = require('../game');
+const { Room } = require('../room');
 
 const T = (s) => s.trim().split(/\s+/);
 
@@ -26,6 +27,29 @@ assert(s.items.some((i) => i.name === 'Semua Triplet'));
 assert(s.items.some((i) => i.name === 'Menang Sendiri (Tsumo)'));
 assert(s.items.some((i) => i.name === 'Triplet Naga'));
 
+// --- skor bunga ---
+t = T('m1 m2 m3 m4 m5 m6 m7 m8 m9 p2 p3 p4 s5 s5');
+let base = scoreWin(winPatterns(t, []), ctx(t)).faan;
+let withF = scoreWin(winPatterns(t, []), ctx(t, { flowers: ['f2', 'n2', 'f1'] }));
+assert.strictEqual(withF.faan, base + 2, 'bunga & musim kursi Selatan (seatWind 1)'); // f2 dan n2 = 2 faan, f1 tidak
+assert(withF.items.some((i) => i.name === 'Bunga Kursi') && withF.items.some((i) => i.name === 'Musim Kursi'));
+assert.strictEqual(scoreWin(winPatterns(t, []), ctx(t, { flowers: ['f1', 'f2', 'f3', 'f4'] })).faan, base + 1 + 2, 'empat bunga + bunga kursi');
+assert.strictEqual(scoreWin(winPatterns(t, []), ctx(t, { flowers: ['f1','f2','f3','f4','n1','n2','n3','n4'] })).faan, Math.min(13, base + 2 + 8), 'delapan bunga');
+
+// --- dadu penentu bandar ---
+for (let n = 0; n < 200; n++) {
+  const r = new Room('TEST'); r.seats[1] = { name: 'A', bot: false, connected: true, token: 'x' }; r.host = 1;
+  r.start();
+  const [a, b] = r.dice;
+  assert(a >= 1 && a <= 6 && b >= 1 && b <= 6);
+  assert.strictEqual(r.game.dealer, (1 + a + b - 1) % 4, 'bandar = hitung dari host');
+  assert.deepStrictEqual(r.game.view(1).dice, [a, b]);
+  r.clearTimers();
+  r.game.phase = 'over'; r.game.result = { dealerStays: true }; r.game.scores = [500,500,500,500]; r.nextHand();
+  assert.strictEqual(r.game.view(1).dice, null, 'dadu hanya di ronde pertama');
+  r.clearTimers();
+}
+
 // --- simulasi permainan penuh ---
 let wins = 0, draws = 0;
 for (let n = 0; n < 400; n++) {
@@ -41,10 +65,14 @@ for (let n = 0; n < 400; n++) {
     assert(winPatterns(full, r.melds[r.winner]).length > 0, 'tangan pemenang harus valid');
     assert.strictEqual(full.length + r.melds[r.winner].reduce((a, m) => a + m.tiles.length, 0) - r.melds[r.winner].filter((m) => m.type === 'kong').length, 14);
   } else draws++;
-  // jumlah ubin total tetap 136
-  const total = g.wall.length + g.hands.flat().length + g.discards.flat().length + g.melds.flat().reduce((a, m) => a + m.tiles.length, 0);
-  assert.strictEqual(total, 136, 'total ubin 136');
+  // jumlah ubin total tetap 144
+  const total = g.wall.length + g.hands.flat().length + g.discards.flat().length + g.flowers.flat().length + g.melds.flat().reduce((a, m) => a + m.tiles.length, 0);
+  assert(g.hands.flat().every((t) => !isFlower(t)), 'bunga tidak boleh di tangan');
+  assert.strictEqual(total, 144, 'total ubin 144');
   assert.strictEqual(g.pool.length, g.discards.flat().length, 'pool konsisten dengan buangan');
   assert(g.drawSeq >= 1 && g.gid.length === 8);
 }
+let flowerGames = 0;
+for (let n = 0; n < 100; n++) { const g = new Game({ dealer: n % 4, roundWind: 0, scores: [500, 500, 500, 500] }); if (g.flowers.flat().length) flowerGames++; g.hands.forEach((h, i) => assert.strictEqual(h.length, i === g.dealer ? 14 : 13, 'jumlah ubin tangan awal')); }
+assert(flowerGames > 50, 'sebagian besar ronde memiliki bunga');
 console.log(`OK: 400 permainan simulasi (${wins} menang, ${draws} seri)`);

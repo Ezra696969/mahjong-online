@@ -58,12 +58,19 @@ class Room {
   start() {
     if (this.game && this.game.phase !== 'over') return 'Game sudah berjalan';
     for (let i = 0; i < 4; i++) if (!this.seats[i]) this.addBot();
+    // ronde pertama: host melempar dadu, jumlahnya menentukan bandar (dihitung berlawanan jarum jam dari host)
+    this.dice = null;
+    if (this.handsPlayed === 0) {
+      this.dice = [crypto.randomInt(1, 7), crypto.randomInt(1, 7)];
+      const roller = this.host >= 0 ? this.host : 0;
+      this.dealer = (roller + this.dice[0] + this.dice[1] - 1) % 4;
+    }
     this.newHand();
     return null;
   }
 
   newHand() {
-    this.game = new Game({ dealer: this.dealer, roundWind: Math.floor(this.rotations / 4) % 4, scores: this.scores });
+    this.game = new Game({ dealer: this.dealer, roundWind: Math.floor(this.rotations / 4) % 4, scores: this.scores, dice: this.handsPlayed === 0 ? this.dice : null });
     this.handsPlayed++;
     this.afterChange();
   }

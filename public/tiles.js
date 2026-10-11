@@ -44,6 +44,47 @@ function stick(x, y, h, col) {
     `<line x1="${x - w / 2}" x2="${x + w / 2}" y1="${y + h / 6}" y2="${y + h / 6}" stroke="#fff" stroke-opacity=".75" stroke-width="1.2"/>`;
 }
 
+// Bunga (f1-f4: Plum, Anggrek, Krisan, Bambu) dan Musim (n1-n4: Semi, Panas, Gugur, Dingin)
+const FLOWER_COL = ['#e0527f', '#9b5fd0', '#f0a021', '#2f9a55'];
+function petals(cx, cy, r, col, n, rot) {
+  let out = '';
+  for (let k = 0; k < n; k++) {
+    const a = rot + (360 / n) * k;
+    out += `<ellipse cx="${cx}" cy="${cy - r}" rx="${r * 0.62}" ry="${r}" fill="${col}" stroke="#0000002a" stroke-width="0.8" transform="rotate(${a} ${cx} ${cy})"/>`;
+  }
+  return out;
+}
+function flowerArt(n) {
+  let art;
+  if (n === 4) { // bambu
+    art = '<rect x="28" y="10" width="5" height="46" rx="2" fill="#2f9a55" stroke="#0e4a29" stroke-width="0.8"/>' +
+      '<line x1="28" x2="33" y1="26" y2="26" stroke="#fff" stroke-width="1.4"/><line x1="28" x2="33" y1="40" y2="40" stroke="#fff" stroke-width="1.4"/>' +
+      '<path d="M33 22 Q46 14 50 20 Q42 26 33 22Z" fill="#3fb86c"/><path d="M28 36 Q16 28 11 34 Q20 40 28 36Z" fill="#3fb86c"/>';
+  } else {
+    art = petals(30, 30, n === 3 ? 12 : 11, FLOWER_COL[n - 1], n === 3 ? 10 : 5, n === 2 ? 36 : 0) +
+      '<circle cx="30" cy="30" r="6" fill="#ffd84a" stroke="#a8760a" stroke-width="1"/>';
+  }
+  return art + `<text x="30" y="71" text-anchor="middle" font-size="15" font-weight="800" fill="#c0392b" font-family="${TILE_FONT}">${n}</text>`;
+}
+function seasonArt(n) {
+  let art;
+  if (n === 1) {
+    art = '<path d="M30 52 L30 30" stroke="#2f9a55" stroke-width="3"/>' +
+      '<path d="M30 34 Q14 30 12 14 Q28 14 30 34Z" fill="#5cc77a" stroke="#0e4a29" stroke-width="0.8"/>' +
+      '<path d="M30 40 Q46 36 48 20 Q32 20 30 40Z" fill="#3fb86c" stroke="#0e4a29" stroke-width="0.8"/>';
+  } else if (n === 2) {
+    art = '<circle cx="30" cy="32" r="11" fill="#ff9d2e" stroke="#b85c00" stroke-width="1.2"/>';
+    for (let a = 0; a < 360; a += 45) art += `<line x1="30" y1="14" x2="30" y2="8" stroke="#ff9d2e" stroke-width="3" stroke-linecap="round" transform="rotate(${a} 30 32)"/>`;
+  } else if (n === 3) {
+    art = '<path d="M30 52 Q10 40 16 18 Q24 22 30 10 Q36 22 44 18 Q50 40 30 52Z" fill="#e07a1f" stroke="#7a3d00" stroke-width="1"/>' +
+      '<path d="M30 52 L30 22" stroke="#7a3d00" stroke-width="1.4"/>';
+  } else {
+    art = '';
+    for (const a of [0, 60, 120]) art += `<g transform="rotate(${a} 30 32)"><line x1="30" y1="12" x2="30" y2="52" stroke="#4aa3e8" stroke-width="3" stroke-linecap="round"/><path d="M25 17 L30 22 L35 17 M25 47 L30 42 L35 47" stroke="#4aa3e8" stroke-width="2" fill="none" stroke-linecap="round"/></g>`;
+  }
+  return art + `<text x="30" y="71" text-anchor="middle" font-size="15" font-weight="800" fill="#1f7a45" font-family="${TILE_FONT}">${n}</text>`;
+}
+
 const _svgCache = {};
 function tileSVG(t) {
   if (_svgCache[t]) return _svgCache[t];
@@ -72,6 +113,10 @@ function tileSVG(t) {
         body += stick(x, y, h, red ? C_RED : C_GREEN);
       });
     }
+  } else if (suit === 'f') {
+    body = flowerArt(n);
+  } else if (suit === 'n') {
+    body = seasonArt(n);
   } else if (suit === 'w') {
     body = `<text x="30" y="55" text-anchor="middle" font-size="46" font-weight="700" fill="${C_DARK}" font-family="${TILE_FONT}">${'東南西北'[n - 1]}</text>`;
   } else if (n === 1) {
@@ -85,12 +130,14 @@ function tileSVG(t) {
   return (_svgCache[t] = `<svg viewBox="0 0 60 78" xmlns="http://www.w3.org/2000/svg">${body}</svg>`);
 }
 
-const SUIT_ORDER = { m: 0, p: 1, s: 2, w: 3, d: 4 };
+const SUIT_ORDER = { m: 0, p: 1, s: 2, w: 3, d: 4, f: 5, n: 6 };
 const tileSortKey = (t) => SUIT_ORDER[t[0]] * 10 + +t[1];
 
 const TILE_NAMES ={ m: 'Wan', p: 'Pin', s: 'Bambu', w: 'Angin', d: 'Naga' };
 function tileName(t) {
   if (t[0] === 'w') return 'Angin ' + ['Timur', 'Selatan', 'Barat', 'Utara'][+t[1] - 1];
+  if (t[0] === 'f') return 'Bunga ' + ['Plum', 'Anggrek', 'Krisan', 'Bambu'][+t[1] - 1];
+  if (t[0] === 'n') return 'Musim ' + ['Semi', 'Panas', 'Gugur', 'Dingin'][+t[1] - 1];
   if (t[0] === 'd') return 'Naga ' + ['Merah', 'Hijau', 'Putih'][+t[1] - 1];
   return t[1] + ' ' + TILE_NAMES[t[0]];
 }

@@ -299,3 +299,24 @@ b { font-weight: 700; }
   .p-me { gap: 4px; }
   .pool { inset: calc(var(--wt) + 26px); --tw: 20px; }
 }
+
+/* bunga & musim, dadu penentu bandar, sorotan peluang klaim */
+.flowers { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; margin-top: 4px; padding-top: 4px; border-top: 1px dashed rgba(255, 255, 255, .15); }
+.p-me .flowers { border-top: none; border-left: 1px dashed rgba(255, 255, 255, .2); padding: 0 0 0 10px; margin: 0; align-self: flex-end; }
+.hand .tile.match { outline: 3px solid #4aa3e8; outline-offset: 1px; animation: matchGlow .9s ease-in-out infinite; }
+@keyframes matchGlow { 50% { box-shadow: 0 0 16px rgba(74, 163, 232, .95); transform: translateY(-6px); } }
+
+.dice-stage { position: fixed; transform: translate(-50%, -50%); z-index: 210; text-align: center; pointer-events: none; animation: fadeIn .25s both; }
+.dice-stage.out { opacity: 0; transition: opacity .45s; }
+.dice { display: flex; gap: 18px; justify-content: center; }
+.die { width: 64px; height: 64px; background: linear-gradient(#fff, #e8e2cd); border-radius: 12px; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 9px; box-shadow: 0 6px 0 #b9b196, 0 12px 22px rgba(0, 0, 0, .55); }
+.die i { border-radius: 50%; }
+.die i.on { background: radial-gradient(circle at 35% 35%, #444, #111); margin: 12%; }
+.dice-stage .die:first-child i.on { background: radial-gradient(circle at 35% 35%, #e5604d, #a52a1a); }
+.die.rolling { animation: dieRoll .5s linear infinite; }
+.die.rolling:nth-child(2) { animation-direction: reverse; animation-duration: .42s; }
+@keyframes dieRoll { 0% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-30px) rotate(110deg); } 50% { transform: translateY(0) rotate(200deg); } 75% { transform: translateY(-14px) rotate(290deg); } 100% { transform: translateY(0) rotate(360deg); } }
+.dice.landed .die { animation: dieLand .5s cubic-bezier(.2, .9, .3, 1.3); }
+@keyframes dieLand { 0% { transform: translateY(-40px) scale(1.2) rotate(40deg); } 100% { transform: none; } }
+.dice-cap { margin-top: 18px; font-size: 14px; color: #fff; background: rgba(0, 0, 0, .6); border: 1px solid var(--line); border-radius: 20px; padding: 6px 16px; backdrop-filter: blur(4px); }
+.dice-cap.final { color: var(--accent); font-weight: 700; font-size: 16px; }

@@ -16,7 +16,7 @@ function buildSheet() {
   const body = document.getElementById('sheetBody');
   body.innerHTML = '';
   body.append(el('h3', '', 'Cheatsheet ubin'));
-  body.append(el('p', 'sub', '136 ubin = 34 jenis × 4. Tekan tombol Cheatsheet lagi untuk menutup.'));
+  body.append(el('p', 'sub', '34 jenis × 4 ubin + 8 bunga/musim = 144 ubin. Tekan tombol Cheatsheet lagi untuk menutup.'));
 
   const grid = el('div', 'sheet-grid');
   const head = el('div', 'sg-row sg-head');
@@ -51,7 +51,15 @@ function buildSheet() {
   honor.append(dr, wd);
   body.append(honor);
 
-  body.append(el('p', 'sub note', 'Ubin Bunga & Musim (ada di gambar referensi) tidak dipakai di versi ini.'));
+  const fl = el('div', 'sheet-honor');
+  fl.append(el('div', 'sh-title', 'Bunga & Musim (8 ubin, tiap jenis ×1)'));
+  const f1 = el('div', 'sh-block');
+  f1.append(el('div', 'sh-sub', 'Bunga'), tilesRow(['f1', 'f2', 'f3', 'f4']), el('div', 'sh-cap', 'Plum · Anggrek · Krisan · Bambu'));
+  const f2 = el('div', 'sh-block');
+  f2.append(el('div', 'sh-sub', 'Musim'), tilesRow(['n1', 'n2', 'n3', 'n4']), el('div', 'sh-cap', 'Semi · Panas · Gugur · Dingin'));
+  fl.append(f1, f2);
+  body.append(fl);
+  body.append(el('p', 'sub note', 'Total 144 ubin. Bunga/Musim tidak dipegang di tangan: langsung diletakkan di samping dan diganti ubin lain. Nomor 1–4 = kursi Timur, Selatan, Barat, Utara.'));
 }
 
 function buildHelp() {
@@ -67,17 +75,19 @@ function buildHelp() {
   };
 
   sec('Starting (disiapkan otomatis oleh game)', [
-    'Ubin dikocok lalu disusun menjadi tembok persegi (17 ubin panjang, 2 tingkat).',
-    'Dadu menentukan dealer (<b>Timur</b>). Di game ini host memulai sebagai Timur, lalu dealer bergilir.',
-    'Dadu juga menentukan dari mana tembok dibuka — game mengocok dan membagi sendiri.',
-    'Timur mengambil 4 ubin, lalu pemain berikutnya bergantian 4 ubin, sampai tiap pemain punya 12.',
-    'Tiap pemain mengambil 1 ubin lagi sehingga memegang <b>13 ubin</b>. Dealer langsung mengambil ubin ke-14 dan memulai.',
+    'Ubin (144, termasuk 8 bunga/musim) dikocok lalu disusun menjadi tembok yang mengitari meja.',
+    'Host melempar <b>dadu</b>. Jumlahnya dihitung berlawanan jarum jam dari host dan menentukan <b>bandar</b> (dealer, duduk di <b>Timur</b>). Bandar bergilir ke kanan bila bandar tidak menang.',
+    'Game mengocok dan membagikan sendiri: tiap pemain mendapat <b>13 ubin</b> (dibagikan dari tengah meja).',
+    '<b>Bunga/Musim</b> di tangan langsung diletakkan di samping dan diganti ubin dari ujung belakang tembok, mulai dari bandar.',
+    'Bandar mengambil ubin ke-14 dan memulai permainan.',
   ]);
 
   sec('Play', [
     'Selama masih ada ubin di tembok, <b>ambil 1 ubin lalu buang 1 ubin</b>. (14 ubin terakhir tidak diambil; bila sisa 0 ronde seri.)',
     'Ubin yang dibuang boleh diklaim siapa pun untuk <b>Mahjong (menang)</b>, <b>Pong</b>, atau <b>Kong</b>, atau oleh pemain di sebelah kanan pembuang (yang bermain sesudahnya) untuk <b>Chow</b>. Pong, Kong, dan Chow dari klaim ditaruh terbuka menghadap atas.',
     'Bila kamu mengambil ubin ke-4 yang sama: jika kamu punya Pong terbuka kamu boleh menambahnya jadi <b>Kong</b>. Jika keempatnya ada di tanganmu, kamu boleh mendeklarasi <b>Kong tertutup</b> (2 terbuka, 2 tertutup). Setiap Kong, ambil ubin pengganti dari ujung belakang tembok.',
+    'Bila ubin yang kamu ambil adalah <b>Bunga/Musim</b>, otomatis diletakkan di sampingmu dan diganti ubin lain.',
+    '<b>Kapan bisa Pon?</b> Hanya untuk ubin yang <b>baru saja dibuang</b> orang lain, selama jendela klaim terbuka (maks. 20 detik), dan kamu sudah memegang <b>2 ubin yang sama</b> di tangan. Saat itu tombol Pon muncul dan ubin yang cocok di tanganmu menyala biru. Ubin buangan lama di tumpukan tidak bisa diambil, dan ubin ketiga yang kamu ambil sendiri tidak perlu diklaim (cukup disimpan).',
     'Ronde berakhir saat ada yang <b>Mahjong</b> (4 set + 1 pasang), atau bila ubin tidak bisa diambil lagi.',
     'Skor dihitung otomatis. Dealer berpindah ke kanan bila dealer tidak menang; bila dealer menang atau ronde seri, dealer tetap.',
   ]);
@@ -120,6 +130,9 @@ function buildHelp() {
     ['Satu Warna Murni · Tiga Naga Besar', '6'],
     ['Semua Honor', '10'],
     ['Tiga Belas Yatim', '13'],
+    ['Bunga Kursi / Musim Kursi (nomor = kursimu)', '1 per ubin'],
+    ['Empat Bunga / Empat Musim', '2'],
+    ['Delapan Bunga (semua bunga dan musim)', '8'],
     ['Ubin kong / ubin terakhir', '+1'],
   ].forEach(([a, c]) => {
     const tr = document.createElement('tr');

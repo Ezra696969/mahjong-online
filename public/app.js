@@ -99,7 +99,7 @@ function apply(g) {
   const fresh = !!g && newGid && isFresh(g);
   if (newGid) { holds.clear(); selected = null; absorbed = null; }
   if (g) reconcile(g, newGid, fresh);
-  const evs = g && prev && !newGid ? computeEvents(prev, g) : fresh ? [{ t: 'deal' }] : [];
+  const evs = g && prev && !newGid ? computeEvents(prev, g) : fresh ? [{ t: 'deal', dice: g.dice }] : [];
   poolRectBefore = capturePoolRect();
   game = g;
   if (animOn) setHolds(evs, g);
@@ -107,8 +107,13 @@ function apply(g) {
   shownGame = g;
   if (!g) return;
   const la = g.lastAction;
-  if (prev && !newGid && la && (!prev.lastAction || la.id !== prev.lastAction.id) && FLASH[la.kind]) flash(la);
+  if (prev && !newGid && la && (!prev.lastAction || la.id !== prev.lastAction.id) && FLASH[la.kind]) flash(`${nameOf(la.seat)}: ${FLASH[la.kind]}`);
+  if (prev && !newGid) {
+    const s = g.players.findIndex((p, i) => p.flowers.length > prev.players[i].flowers.length);
+    if (s >= 0) flash(`${nameOf(s)}: Bunga!`);
+  }
   if (animOn) play(evs, g);
+  else if (fresh && g.dice) toast(diceCaption(g));
 }
 
 // ---------- urutan tangan ----------
@@ -177,7 +182,7 @@ function capturePoolRect() {
   return t ? t.getBoundingClientRect() : null;
 }
 // Tembok ubin tertutup yang mengitari meja. 84 slot (136 - 52 dibagikan); slot terdepan habis lebih dulu.
-const WALL_SLOTS = 84, WALL_SIDES = [25, 17, 25, 17]; // atas, kanan, bawah, kiri
+const WALL_SLOTS = 92, WALL_SIDES = [28, 18, 28, 18]; // 144 - 52 dibagikan; atas, kanan, bawah, kiri
 function buildWallRing(g) {
   const ring = h('div', 'wring');
   const consumed = Math.max(0, WALL_SLOTS - g.wallTotal);
@@ -249,14 +254,46 @@ function flight({ tile, from, to, hold = 0, big = 2.4, dur = 540, arc = -60, siz
 
 function play(evs, g) {
   for (const e of evs) {
-    if (e.t === 'deal') playDeal(g);
+    if (e.t === 'deal') playDeal(g, e.dice ? playDice(g) : 0);
     else if (e.t === 'discard') playDiscard(e, g);
     else if (e.t === 'claim') playClaim(e, g);
     else if (e.t === 'draw') setTimeout(() => playDraw(e, g), e.delay);
   }
 }
 
-function playDeal(g) {
+const diceCaption = (g) => `Dadu ${g.dice[0]} + ${g.dice[1]} = ${g.dice[0] + g.dice[1]}. Bandar: ${nameOf(g.dealer)} (Timur)`;
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+function dieEl(v) {
+  const d = h('div', 'die');
+  const set = (n) => { d.innerHTML = ''; for (let i = 0; i < 9; i++) d.append(h('i', PIPS[n].includes(i) ? 'on' : '')); };
+  d.set = set; set(v);
+  return d;
+}
+// Lempar dadu di tengah meja untuk menentukan bandar (ronde pertama). Mengembalikan lama animasi (ms).
+function playDice(g) {
+  const DICE_ROLL = 1900, DICE_SHOW = 1900;
+  const zone = $('.center-zone'); if (!zone) return 0;
+  const r = zone.getBoundingClientRect();
+  const stage = h('div', 'dice-stage');
+  stage.style.left = r.left + r.width / 2 + 'px'; stage.style.top = r.top + r.height / 2 + 'px';
+  const a = dieEl(1 + Math.floor(Math.random() * 6)), b = dieEl(1 + Math.floor(Math.random() * 6));
+  a.classList.add('rolling'); b.classList.add('rolling');
+  const dice = h('div', 'dice'); dice.append(a, b);
+  const cap = h('div', 'dice-cap', 'Melempar dadu untuk menentukan bandar…');
+  stage.append(dice, cap);
+  $('#fx').append(stage);
+  const iv = setInterval(() => { a.set(1 + Math.floor(Math.random() * 6)); b.set(1 + Math.floor(Math.random() * 6)); }, 90);
+  setTimeout(() => {
+    clearInterval(iv);
+    a.set(g.dice[0]); b.set(g.dice[1]);
+    a.classList.remove('rolling'); b.classList.remove('rolling'); dice.classList.add('landed');
+    cap.textContent = diceCaption(g); cap.classList.add('final');
+  }, DICE_ROLL);
+  setTimeout(() => { stage.classList.add('out'); setTimeout(() => stage.remove(), 500); }, DICE_ROLL + DICE_SHOW);
+  return DICE_ROLL + DICE_SHOW + 300;
+}
+
+function playDeal(g, base = 0) {
   const zone = $('.center-zone').getBoundingClientRect();
   const cx = zone.left + zone.width / 2, cy = zone.top + zone.height / 2;
   const per = [0, 1, 2, 3].map((s) => (s === you ? $$('.hand .tile') : $$(`.panel[data-seat="${s}"] .hidden-hand .tile`)));
@@ -270,9 +307,9 @@ function playDeal(g) {
       { transform: `translate(${dx}px, ${dy}px) scale(.2) rotate(${rnd(-50, 50)}deg)`, opacity: 0 },
       { transform: `translate(${dx * 0.25}px, ${dy * 0.25 - 30}px) scale(1.15) rotate(${rnd(-8, 8)}deg)`, opacity: 1, offset: 0.65 },
       { transform: 'none', opacity: 1 },
-    ], { duration: 620, delay: i * 26, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'backwards' });
+    ], { duration: 620, delay: base + i * 26, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'backwards' });
   });
-  blockUntil = Date.now() + list.length * 26 + 700;
+  blockUntil = Date.now() + base + list.length * 26 + 700;
 }
 
 async function playDiscard(e, g) {
@@ -312,9 +349,9 @@ async function playDraw(e, g) {
   }
 }
 
-function flash(la) {
+function flash(text) {
   const z = $('.center-zone'); if (!z || !room) return;
-  const f = h('div', 'flash', `${nameOf(la.seat)}: ${FLASH[la.kind]}`);
+  const f = h('div', 'flash', text);
   z.append(f);
   setTimeout(() => f.remove(), 1600);
 }
@@ -373,7 +410,7 @@ function panelHead(seat, g) {
   const hd = h('div', 'ph');
   const s = room.seats[seat];
   hd.append(avatar(seat, 'sm'), h('span', 'wind', WIND[g.players[seat].wind]), h('span', 'nm', (s ? s.name : '?') + (seat === you ? ' (kamu)' : '')));
-  if (seat === g.dealer) { const d = h('span', 'dealer', '庄'); d.title = 'Dealer'; hd.append(d); }
+  if (seat === g.dealer) { const d = h('span', 'dealer', 'Bandar'); d.title = 'Bandar (dealer)'; hd.append(d); }
   hd.append(h('span', 'sc', String(g.scores[seat])));
   if (s && !s.bot && !s.connected) hd.append(h('span', 'off', 'terputus'));
   return hd;
@@ -402,6 +439,7 @@ function renderGame() {
     }
     panel.append(hh);
     if (p.melds.length) { const ms = h('div', 'melds'); p.melds.forEach((m, i) => ms.append(meldEl(m, 'tiny', `meld-${seat}-${i}`))); panel.append(ms); }
+    if (p.flowers.length) panel.append(flowersEl(p.flowers, 'tiny'));
     table.append(panel);
   }
 
@@ -451,9 +489,13 @@ function renderGame() {
   const tb = h('div', 'timerbar idle'); const bar = h('i'); tb.append(bar); me.append(tb);
   const mine = myTurn || !!g.claim;
   if (deadline && mine) {
-    const remain = Math.max(0, deadline - Date.now());
+    // Lanjutkan dari posisi waktu sebenarnya (animasi diputar ulang dengan delay negatif), jadi
+    // render ulang (mis. tombol Urutkan, geser ubin) tidak membuat bar seolah kembali penuh.
+    const total = g.claim ? 20000 : 45000;
+    const remain = Math.max(0, Math.min(total, deadline - Date.now()));
     tb.classList.remove('idle');
-    bar.style.animation = `shrinkbar ${remain}ms linear forwards`;
+    bar.style.animation = `shrinkbar ${total}ms linear forwards`;
+    bar.style.animationDelay = `-${total - remain}ms`;
   }
   const row = h('div', 'myrow');
   const hand = h('div', 'hand');
@@ -475,6 +517,7 @@ function renderGame() {
   row.append(hand);
   const mm = g.players[you].melds;
   if (mm.length) { const ms = h('div', 'melds'); mm.forEach((m, i) => ms.append(meldEl(m, 'small', `meld-${you}-${i}`))); row.append(ms); }
+  if (g.players[you].flowers.length) row.append(flowersEl(g.players[you].flowers, 'small'));
   me.append(row);
   const tools = h('div', 'tools');
   const sb = h('button', '', '↕ Urutkan'); sb.onclick = sortHand;
@@ -485,8 +528,21 @@ function renderGame() {
   renderResult(g);
 }
 
+// bunga/musim yang sudah diletakkan pemain
+function flowersEl(list, cls) {
+  const d = h('div', 'flowers');
+  d.title = 'Bunga & musim';
+  list.forEach((t) => d.append(makeTile(t, { cls })));
+  return d;
+}
+// ubin di tangan yang bisa dipakai untuk klaim (Pon/Kong/Chi) disorot agar peluangnya tidak terlewat
+function claimMatch(t) {
+  const c = game && game.claim; if (!c) return false;
+  if ((c.pon || c.kong) && t === c.tile) return true;
+  return c.chi.some((p) => p.includes(t));
+}
 function handTile(t, i, myTurn) {
-  const el = makeTile(t, { cls: selected === 'h' + i ? 'sel' : '' });
+  const el = makeTile(t, { cls: (selected === 'h' + i ? 'sel' : '') + (claimMatch(t) ? ' match' : '') });
   el.draggable = true;
   el.onclick = () => clickTile(el, 'h' + i, t, myTurn);
   el.addEventListener('dragstart', (e) => {
@@ -593,6 +649,7 @@ function renderResult(g) {
     });
     row.append(h('div', 'who', nameOf(s)), tiles);
     r.melds[s].forEach((m) => row.append(meldEl(m, 'small')));
+    if (r.flowers && r.flowers[s].length) row.append(flowersEl(r.flowers[s], 'small'));
     hands.append(row);
   }
   box.append(hands);
