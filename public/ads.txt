@@ -1,0 +1,2 @@
+# ads.txt: isi baris resmi dari AdSense setelah situs disetujui, contoh formatnya:
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

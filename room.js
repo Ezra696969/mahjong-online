@@ -5,6 +5,7 @@ const { Game } = require('./game');
 const BOT_NAMES = ['Bot Budi', 'Bot Sari', 'Bot Dewi', 'Bot Agus', 'Bot Rina', 'Bot Joko'];
 const HUMAN_TURN_MS = 45000;
 const HUMAN_CLAIM_MS = 20000;
+const READY_GRACE_MS = 40000; // sejak pemain pertama menekan Siap, sisanya diberi waktu segini lalu ronde mulai
 const rand = (a, b) => a + Math.floor(Math.random() * (b - a));
 
 class Room {
@@ -19,6 +20,10 @@ class Room {
     this.timers = [];
     this.deadline = null;
     this.handsPlayed = 0;
+    this.ready = new Set();     // kursi manusia yang sudah menekan Siap di layar hasil
+    this.readyAt = null;        // batas waktu (ms epoch) setelah Siap pertama
+    this.readyTimer = null;
+    this.readyGraceMs = READY_GRACE_MS;
   }
 
   // ----- kursi -----
@@ -75,6 +80,35 @@ class Room {
     this.afterChange();
   }
 
+  // Layar hasil: ronde berikutnya mulai bila semua pemain manusia yang tersambung sudah Siap,
+  // atau setelah masa tenggang sejak Siap pertama (agar pemain yang pergi tidak menahan yang lain).
+  setReady(seat) {
+    const g = this.game;
+    if (!g || g.phase !== 'over') return 'Belum selesai';
+    const s = this.seats[seat];
+    if (!s || s.bot) return null;
+    if (!this.ready.has(seat)) {
+      this.ready.add(seat);
+      if (!this.readyTimer) {
+        this.readyAt = Date.now() + this.readyGraceMs;
+        this.readyTimer = setTimeout(() => { this.readyTimer = null; if (this.game && this.game.phase === 'over') this.startNext(); }, this.readyGraceMs);
+      }
+    }
+    this.afterChange();
+    return null;
+  }
+
+  _allReady() {
+    const need = this.seats.map((s, i) => (s && !s.bot && s.connected ? i : -1)).filter((i) => i >= 0);
+    return need.length > 0 && need.every((i) => this.ready.has(i));
+  }
+
+  startNext() {
+    clearTimeout(this.readyTimer); this.readyTimer = null;
+    this.ready.clear(); this.readyAt = null;
+    return this.nextHand();
+  }
+
   nextHand() {
     const g = this.game;
     if (!g || g.phase !== 'over') return 'Belum selesai';
@@ -92,6 +126,7 @@ class Room {
   }
 
   afterChange() {
+    if (this.game && this.game.phase === 'over' && this.ready.size && this._allReady()) { this.startNext(); return; }
     this.schedule(); // hitung deadline dulu agar ikut terkirim di status
     this.broadcast();
   }
@@ -129,6 +164,8 @@ class Room {
       host: this.host,
       started: !!this.game,
       handsPlayed: this.handsPlayed,
+      ready: [...this.ready],
+      readyDeadline: this.readyAt,
       seats: this.seats.map((s) => (s ? { name: s.name, bot: !!s.bot, connected: !!s.connected } : null)),
     };
   }
@@ -157,7 +194,7 @@ class Room {
     for (let i = 0; i < 4; i++) if (this.seats[i] && !this.seats[i].bot) this.send(i, { t: 'chat', from, name, text });
   }
 
-  destroy() { this.clearTimers(); }
+  destroy() { this.clearTimers(); clearTimeout(this.readyTimer); }
 }
 
 module.exports = { Room };

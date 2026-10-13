@@ -75,4 +75,29 @@ for (let n = 0; n < 400; n++) {
 let flowerGames = 0;
 for (let n = 0; n < 100; n++) { const g = new Game({ dealer: n % 4, roundWind: 0, scores: [500, 500, 500, 500] }); if (g.flowers.flat().length) flowerGames++; g.hands.forEach((h, i) => assert.strictEqual(h.length, i === g.dealer ? 14 : 13, 'jumlah ubin tangan awal')); }
 assert(flowerGames > 50, 'sebagian besar ronde memiliki bunga');
+// --- tombol siap ---
+function mkRoom(n) {
+  const r = new Room('RDY'); r.readyGraceMs = 120;
+  for (let i = 0; i < n; i++) r.seats[i] = { name: 'H' + i, bot: false, connected: true, token: 't' + i, lastSeen: Date.now() };
+  r.host = 0; r.start(); r.clearTimers();
+  r.game.phase = 'over'; r.game.result = { dealerStays: true }; r.game.scores = [500, 500, 500, 500];
+  return r;
+}
+{
+  const r = mkRoom(2); const g1 = r.game.gid;
+  r.setReady(0); assert.strictEqual(r.game.gid, g1, 'belum mulai: pemain 1 belum siap');
+  assert.deepStrictEqual([...r.ready], [0]); assert(r.readyAt > Date.now() - 5);
+  r.setReady(0); assert.strictEqual(r.game.gid, g1, 'menekan dua kali tidak menghitung dua');
+  r.setReady(1); assert.notStrictEqual(r.game.gid, g1, 'semua siap -> ronde baru'); assert.strictEqual(r.ready.size, 0);
+  r.clearTimers(); clearTimeout(r.readyTimer);
+  const r2 = mkRoom(2); const g2 = r2.game.gid;
+  r2.seats[1].connected = false; r2.setReady(0);
+  assert.notStrictEqual(r2.game.gid, g2, 'pemain terputus tidak menahan ronde'); r2.clearTimers(); clearTimeout(r2.readyTimer);
+  const r3 = mkRoom(2); r3.setReady(0); // r3 menunggu pemain 1 sampai masa tenggang habis
+  const g3 = r3.game.gid;
+  assert.strictEqual(r3.setReady(0), null);
+  assert.notStrictEqual(typeof r3.setReady(9), 'undefined');
+  setTimeout(() => { assert.notStrictEqual(r3.game.gid, g3, 'masa tenggang habis -> ronde baru'); r3.clearTimers(); clearTimeout(r3.readyTimer); console.log('OK: tombol siap'); }, 250);
+}
+
 console.log(`OK: 400 permainan simulasi (${wins} menang, ${draws} seri)`);

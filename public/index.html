@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Mahjong Online</title>
 <meta name="theme-color" content="#06130e">
-<meta name="description" content="Mahjong 4 pemain, main bareng teman dari perangkat berbeda.">
+<meta name="description" content="Main mahjong online gratis bareng teman dari HP atau komputer. Buat ruangan, bagikan kode, kursi kosong diisi bot. Chi, Pon, Kong, Tsumo, bunga dan skor faan.">
+<meta property="og:title" content="Mahjong Online: main bareng teman, gratis">
+<meta property="og:description" content="Mahjong 4 pemain di browser. Buat ruangan, ajak teman lewat kode, kursi kosong diisi bot.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Mahjong Online","applicationCategory":"GameApplication","operatingSystem":"Web, Android, iOS","inLanguage":"id","isAccessibleForFree":true,"description":"Mahjong 4 pemain di browser dengan mode multiplayer, bot, bunga dan musim, serta skor faan."}</script>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -19,6 +25,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<noscript><p style="padding:70px 20px;color:#fff">Mahjong Online memerlukan JavaScript. Aktifkan JavaScript untuk bermain mahjong online bersama teman. Baca juga: <a href="/cara-main" style="color:#f2c14e">Cara bermain mahjong</a>.</p></noscript>
 
 <div id="conn" class="conn hidden">Menyambung ulang…</div>
 <div id="toast" class="toast hidden"></div>
@@ -56,6 +63,8 @@
       <button id="btnJoin">Gabung</button>
     </div>
     <p class="sub small">Belum tahu cara mainnya? Klik <b>Help</b>. Lupa gambar ubin? Klik <b>Cheatsheet</b>.</p>
+    <div class="adslot adslot-rect" data-adslot="home" hidden></div>
+    <nav class="footlinks"><a href="/cara-main">Cara main mahjong</a><a href="/tentang">Tentang</a><a href="/kebijakan-privasi">Kebijakan privasi</a></nav>
   </div>
 </section>
 
@@ -75,6 +84,7 @@
     </div>
     <p id="lobbyWait" class="sub hidden">Menunggu host memulai permainan…</p>
     <button id="btnLeaveLobby" class="link">Keluar dari ruangan</button>
+    <div class="adslot adslot-rect" data-adslot="lobby" hidden></div>
   </div>
 </section>
 
@@ -113,9 +123,15 @@
   <div class="ih-arrow" id="iosArrow">&#9660;</div>
 </div>
 
+<!-- Iklan 160x600 di sisi meja (hanya layar lebar) dan modal iklan antar ronde; semuanya mati bila mode iklan "off" -->
+<div class="adslot adslot-sky adgut adgut-l" data-adslot="gutter" hidden></div>
+<div class="adslot adslot-sky adgut adgut-r" data-adslot="gutter" hidden></div>
+<div id="adModal" class="admodal" hidden></div>
+
 <div id="fx"></div>
 
 <script src="tiles.js"></script>
+<script src="ads.js"></script>
 <script src="info.js"></script>
 <script src="app.js"></script>
 </body>

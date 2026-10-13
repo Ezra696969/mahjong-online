@@ -357,7 +357,8 @@ function flash(text) {
 }
 
 // ---------- layar ----------
-function show(id) { for (const s of ['home', 'lobby', 'game']) $('#' + s).classList.toggle('hidden', s !== id); }
+let curScreen = 'home';
+function show(id) { curScreen = id; for (const s of ['home', 'lobby', 'game']) $('#' + s).classList.toggle('hidden', s !== id); Ads.layout(id); }
 function render() {
   const inRoom = !!room;
   if (inRoom) $('#iosHint').classList.add('hidden');
@@ -615,8 +616,10 @@ function renderResult(g) {
   const ov = $('#overlay');
   if (!g.result) { ov.classList.add('hidden'); resultFor = null; return; }
   ov.classList.remove('hidden');
-  if (resultFor === g.gid) return;
+  if (resultFor === g.gid) { updateReady(); return; }
   resultFor = g.gid;
+  readySent = false;
+  Ads.roundFinished();
   const r = g.result, box = $('#resultBox');
   box.innerHTML = '';
   const win = r.type === 'win';
@@ -653,9 +656,44 @@ function renderResult(g) {
     hands.append(row);
   }
   box.append(hands);
-  box.append(btn('Ronde berikutnya', 'primary', () => send({ t: 'next' })));
+  // Tombol Siap: ronde berikutnya mulai bila semua pemain manusia siap (atau masa tenggang habis).
+  // Iklan antar ronde (bila dijadwalkan) tampil saat pemain menekan Siap, bukan di tengah permainan.
+  const rb = h('div', 'readybox');
+  const rbtn = btn('Siap, ronde berikutnya', 'primary', onReadyClick); rbtn.id = 'readyBtn';
+  rb.append(rbtn, h('div', 'status')); rb.id = 'readyBox';
+  box.append(rb);
+  const slot = h('div', 'adslot adslot-banner'); slot.dataset.adslot = 'result'; slot.hidden = true;
+  box.append(slot); Ads.mount(box);
+  updateReady();
   if (animOn && r.type === 'win' && r.winner === you) confetti();
 }
+let readySent = false;
+async function onReadyClick() {
+  if (readySent) return;
+  readySent = true;
+  const b = $('#readyBtn'); if (b) { b.disabled = true; b.textContent = 'Siap'; }
+  if (Ads.interstitialDue()) await Ads.showInterstitial();
+  send({ t: 'next' });
+  updateReady();
+}
+// Status siap: siapa saja yang sudah siap, dan hitung mundur masa tenggang
+function updateReady() {
+  const box = $('#readyBox'); if (!box || !room) return;
+  const need = room.seats.map((s, i) => (s && !s.bot && s.connected ? i : -1)).filter((i) => i >= 0);
+  const done = need.filter((i) => (room.ready || []).includes(i));
+  const meReady = (room.ready || []).includes(you);
+  const b = $('#readyBtn');
+  if (b) { b.disabled = meReady || readySent; b.textContent = meReady ? 'Siap ✓' : readySent ? 'Siap' : 'Siap, ronde berikutnya'; }
+  const st = box.querySelector('.status');
+  if (!need.length || (need.length === 1 && !done.length)) { st.textContent = ''; return; }
+  const left = room.readyDeadline ? Math.max(0, Math.ceil((room.readyDeadline - Date.now()) / 1000)) : null;
+  const waiting = need.filter((i) => !done.includes(i)).map(nameOf);
+  st.textContent = done.length
+    ? 'Siap ' + done.length + ' dari ' + need.length + (waiting.length ? ' · menunggu ' + waiting.join(', ') : '') + (left != null ? ' · otomatis mulai ' + left + ' dtk' : '')
+    : 'Menunggu pemain menekan Siap';
+}
+setInterval(updateReady, 1000);
+
 function confetti() {
   const c = $('#confetti'); c.innerHTML = '';
   const colors = ['#f2c14e', '#e5604d', '#5aa9e6', '#7cf0a8', '#a78bfa', '#fff'];
@@ -788,6 +826,8 @@ setTimeout(() => maybeShowIosHint(), 2500);
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
+Ads.mount();
+addEventListener('resize', () => Ads.layout(curScreen));
 try { buildSheet(); buildHelp(); } catch (e) { console.error('info.js gagal dimuat', e); }
 const qs = new URLSearchParams(location.search).get('room');
 if (qs) $('#code').value = qs.toUpperCase().slice(0, 4);

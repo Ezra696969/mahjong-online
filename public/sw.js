@@ -2,7 +2,7 @@
 // Service worker: cache cangkang aplikasi. Jaringan diutamakan agar update selalu terbaru;
 // cache hanya dipakai saat offline. Koneksi game (WebSocket) tidak lewat sini.
 const CACHE = 'mj-shell-v1';
-const SHELL = ['/', '/style.css', '/tiles.js', '/info.js', '/app.js', '/manifest.webmanifest', '/icons/icon-192.png'];
+const SHELL = ['/', '/style.css', '/tiles.js', '/info.js', '/ads.js', '/app.js', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));

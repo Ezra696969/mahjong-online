@@ -12,12 +12,40 @@ const BUILD = Date.now().toString(36);
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json',
+  '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8',
 };
+// halaman statis dengan URL bersih (tanpa .html) untuk SEO
+const PAGES = ['cara-main', 'tentang', 'kebijakan-privasi'];
+function originOf(req) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'localhost').split(',')[0].trim();
+  const proto = String(req.headers['x-forwarded-proto'] || (req.socket.encrypted ? 'https' : 'http')).split(',')[0].trim();
+  return /^[\w.:-]+$/.test(host) && /^https?$/.test(proto) ? `${proto}://${host}` : 'http://localhost';
+}
 
 const server = http.createServer((req, res) => {
-  let p = decodeURIComponent((req.url || '/').split('?')[0]);
+  let p;
+  try { p = decodeURIComponent((req.url || '/').split('?')[0]); } catch { res.writeHead(400); return res.end('Bad request'); }
   if (p === '/health') { res.writeHead(200); return res.end('ok'); }
+  if (p === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': MIME['.txt'], 'Cache-Control': 'public, max-age=3600' });
+    return res.end(`User-agent: *
+Allow: /
+
+Sitemap: ${originOf(req)}/sitemap.xml
+`);
+  }
+  if (p === '/sitemap.xml') {
+    const o = originOf(req), day = new Date().toISOString().slice(0, 10);
+    const urls = ['/', ...PAGES.map((n) => '/' + n)].map((u) => `  <url><loc>${o}${u}</loc><lastmod>${day}</lastmod></url>`).join('\n');
+    res.writeHead(200, { 'Content-Type': MIME['.xml'], 'Cache-Control': 'public, max-age=3600' });
+    return res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`);
+  }
   if (p === '/') p = '/index.html';
+  else if (PAGES.includes(p.slice(1))) p += '.html';
   const file = path.normalize(path.join(PUBLIC, p));
   if (!file.startsWith(PUBLIC)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(file, (err, data) => {
@@ -127,7 +155,7 @@ function handle(ws, m) {
       return;
     }
     case 'next': {
-      const e = room.nextHand();
+      const e = room.setReady(seat);
       if (e) err(ws, e);
       return;
     }

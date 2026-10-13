@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tentang Mahjong Online: Game Mahjong Multiplayer di Browser</title>
+<meta name="description" content="Mahjong Online adalah game mahjong 4 pemain gratis di browser: main bareng teman dari perangkat berbeda, kursi kosong diisi bot, bisa dipasang sebagai aplikasi. Kenali fitur dan cara kerjanya.">
+<meta property="og:title" content="Tentang Mahjong Online">
+<meta property="og:description" content="Game mahjong multiplayer gratis di browser dengan bot, bunga dan musim, serta skor faan.">
+<meta name="theme-color" content="#06130e">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap">
+<link rel="stylesheet" href="page.css">
+</head>
+<body>
+<header class="site">
+  <a class="brand" href="/">Mahjong Online</a>
+  <nav><a href="/cara-main">Cara main</a><a href="/tentang" aria-current="page">Tentang</a><a href="/kebijakan-privasi">Privasi</a></nav>
+  <a class="play" href="/">Main sekarang</a>
+</header>
+<main>
+  <h1>Tentang Mahjong Online</h1>
+  <p class="lead">Mahjong Online adalah game mahjong untuk empat pemain yang bisa dimainkan langsung di browser, di HP maupun komputer, tanpa memasang aplikasi dan tanpa membuat akun.</p>
+
+  <h2>Apa yang bisa dilakukan</h2>
+  <ul>
+    <li><b>Main bareng teman dari perangkat berbeda.</b> Satu orang membuat ruangan, lalu membagikan kode empat huruf atau tautannya. Teman tinggal membuka tautan dan bergabung.</li>
+    <li><b>Kursi kosong diisi bot.</b> Tidak perlu menunggu empat orang; satu pemain pun bisa langsung bermain, dan teman bisa masuk kapan saja menggantikan bot.</li>
+    <li><b>Aturan mahjong lengkap</b> gaya Hong Kong yang disederhanakan: Chi, Pon, Kong, Tsumo, Ron, Tujuh Pasang, Tiga Belas Yatim, bunga dan musim, serta skor faan. Pelajari di halaman <a href="/cara-main">cara bermain mahjong</a>.</li>
+    <li><b>Dadu menentukan bandar</b> di ronde pertama, dan ubin dibagikan dengan animasi dari tengah meja.</li>
+    <li><b>Bisa dipasang sebagai aplikasi</b> (PWA) di Android, iPhone, dan komputer, lengkap dengan tampilan layar penuh.</li>
+    <li><b>Aman dari kecurangan sederhana.</b> Server mengatur semua aturan dan tidak pernah mengirim tangan lawan ke perangkatmu.</li>
+    <li><b>Pemain yang terputus tidak merusak permainan.</b> Giliran dimainkan bot sementara, dan kamu bisa kembali dengan membuka ulang halaman.</li>
+  </ul>
+
+  <h2>Cara kerjanya</h2>
+  <p>Game berjalan lewat koneksi real-time (WebSocket) ke server. Server menyimpan ruangan di memori selama ada pemain, mengocok ubin, memeriksa setiap langkah, dan mengirim kepada tiap pemain hanya apa yang boleh ia lihat. Karena ruangan hanya ada di memori, ruangan yang kosong akan dihapus otomatis dan tidak ada riwayat permainan yang disimpan.</p>
+
+  <h2>Tentang proyek ini</h2>
+  <p>Mahjong Online dibuat sebagai proyek pribadi untuk bersenang-senang sekaligus portofolio, dengan Node.js di sisi server dan HTML, CSS, serta JavaScript murni di sisi klien. Kode sumbernya terbuka di <a href="https://github.com/Ezra696969/mahjong-online" rel="noopener">GitHub</a>.</p>
+
+  <h2>Saran dan laporan masalah</h2>
+  <p>Menemukan bug atau punya usul fitur? Silakan buka laporan di <a href="https://github.com/Ezra696969/mahjong-online/issues" rel="noopener">halaman Issues di GitHub</a>. Sertakan perangkat dan browser yang kamu pakai, serta langkah yang membuat masalah itu muncul.</p>
+
+  <p style="text-align:center"><a class="play cta" href="/">Mulai bermain</a></p>
+</main>
+<footer class="site">
+  <a href="/">Main</a><a href="/cara-main">Cara main</a><a href="/tentang">Tentang</a><a href="/kebijakan-privasi">Kebijakan privasi</a>
+</footer>
+</body>
+</html>
